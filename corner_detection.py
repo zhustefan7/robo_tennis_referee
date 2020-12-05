@@ -1,7 +1,13 @@
 from __future__ import print_function
+import sys
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv2 under python3
 import cv2 as cv
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
 import argparse
+
+
+
 source_window = 'Source image'
 corners_window = 'Corners detected'
 max_thresh = 255
@@ -31,7 +37,7 @@ def cornerHarris_demo(val):
 # parser = argparse.ArgumentParser(description='Code for Harris corner detector tutorial.')
 # parser.add_argument('--input', help='Path to input image.', default='building.jpg')
 # args = parser.parse_args()
-img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/Explorer_HD1080_SN14932_16-22-44.png'
+img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/Explorer_HD1080_SN14932_16-24-06.png'
 src = cv.imread(img_dir)
 if src is None:
     print('Could not open or find the image:', args.input)

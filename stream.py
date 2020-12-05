@@ -1,7 +1,10 @@
 import numpy as np
+import sys
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv2 under python3
 import cv2
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 
 while(True):
     # Capture frame-by-frame
@@ -12,6 +15,7 @@ while(True):
 
     # Display the resulting frame
     cv2.imshow('frame',frame)
+    print(frame.shape)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

@@ -32,8 +32,11 @@ def thresh_callback(val):
     print(contours[max_contour_idx])
     cv.imshow('Contours', drawing)
 # Load source image
-img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/Explorer_HD1080_SN14932_16-22-44.png'
+img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
 src = cv.imread(img_dir)
+
+
+
 if src is None:
     print('Could not open or find the image:', args.input)
     exit(0)

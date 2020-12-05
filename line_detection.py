@@ -77,7 +77,7 @@ def cluster_lines(lines, all_lines_indices):
 
 
 def detect_line():
-    img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/Explorer_HD1080_SN14932_16-22-59.png'
+    img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/Explorer_HD1080_SN14932_16-24-06.png'
     plt_img = plt.imread(img_dir)
     img = cv2.imread( img_dir,0)
     img = img[:,0:1920]
