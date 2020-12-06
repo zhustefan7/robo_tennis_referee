@@ -28,54 +28,16 @@ K = np.array([
     [0, 0, 1]])
 
 #ground plane
-normal = [-0.01750558,  0.95802116,  0.28616259]
+n = np.array([-0.01750558, 0.95802116, 0.28616259]).reshape((-1,1))
 plane_eqn = [-0.01750559,  0.95802122,  0.28616261,  1.69369471]
-plane_center = [ -0.55109537,   1.42110538, -10.71038818]
+plane_center = np.array([ -0.55109537,   1.42110538, -10.71038818]).reshape((-1,1))
 
-# RPY
-if False:
-    pitch = np.arcsin(-n[1])
-    yaw = np.arctan2(n[0], n[2])
-    print("pitch",pitch*180/np.pi)
-    print("yaw",yaw*180/np.pi)
-
-
-    dx = 0
-    dy = 0
-
-    roll = -70
-    pitch = 0.1
-    yaw = 0       #rotate image clockwise  Rz axis is into the image
-
-    roll *= np.pi/180
-    pitch *= np.pi/180
-    yaw *= np.pi/180
-
-    Rx = np.matrix([
-    [1, 0,0],
-    [0, np.cos(roll), -np.sin(roll)],
-    [0, np.sin(roll), np.cos(roll)]
-    ])
-
-    Ry = np.matrix([
-    [np.cos(pitch), 0, np.sin(pitch)],
-    [0, 1, 0],
-    [-np.sin(pitch), 0, np.cos(pitch)]
-    ])
-
-    Rz = np.matrix([
-    [np.cos(yaw), -np.sin(yaw), 0],
-    [np.sin(yaw), np.cos(yaw), 0],
-    [0, 0, 1]
-    ])
-
-    M = Rx
-
-#Dyadic prod & Axis Angle
+#Dyadic prod
 if False:
     #####Dyadic Product
     R_1 = 1/3*np.matmul(a[:,np.newaxis], np.array([[1/n[0], 1/n[1], 1/n[2]]])) 
-
+#Axis Angle
+if False:
     #####Axis Angle
     u = np.cross(a,n)/np.linalg.norm(np.cross(a,n))
     u_hat = np.array([[0, -u[2], u[1]], [u[2], 0, -u[0]], [-u[1], u[0], 0]])
@@ -109,31 +71,28 @@ if False:
     # print(np.linalg.norm(np.cross(a,transformed))/(np.linalg.norm(a)*np.linalg.norm(transformed)))
 
 
-#warp with https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
-if False:
-    dot_prod = np.dot(a, n.T)
-    cross_prod_norm = np.linalg.norm(np.cross(a,n))
+# calculate rotation matrix between 2 vectors
+# https://math.stackexchange.com/questions/180418/calculate-rotation-matrix-to-align-vector-a-to-vector-b-in-3d
+if True:
+    a = np.array([0,1,0]).reshape((-1,1))
+    dot_prod = np.dot(a.flatten(), n.flatten())
+    cross_prod_norm = np.linalg.norm(np.cross(a.flatten(),n.flatten()))
     G = np.array(
         [[dot_prod, -cross_prod_norm, 0],
         [cross_prod_norm, dot_prod, 0],
         [0, 0, 1]])
 
-    u = a.reshape((-1,1))
+    u = a
     v = ((n-dot_prod * a)/np.linalg.norm(n-dot_prod * a)).reshape((-1,1))
-    w = np.cross(n,a).reshape((-1,1))
-
+    w = np.cross(n.flatten(),a.flatten()).reshape((-1,1))
     F = np.concatenate([u,v,w],axis=1)
     F = np.linalg.inv(F)
 
     U = np.linalg.inv(F) @ G @ F
-    # U = np.vstack((U,np.zeros(3)))
-    # U = np.hstack((U,np.array([0,0,0,1]).reshape((-1,1))))
-    print(U)
-    # M = K @ U
-    M = U
+    R = U
 
-#Warp by obtaining homography
-if True:
+#Warp by 4 points
+if False:
     #corners of original image
     # img_corners = np.array([
     #     [160,300],
@@ -199,23 +158,71 @@ if False:
             print(intensity)
             warp[y_w,x_w,:] = intensity
 
+# RPY
+if True:
+    pitch = np.arcsin(-n[1,0])
+    roll = np.arctan2(n[0,0], n[2,0])
+    print("pitch",pitch*180/np.pi)
+    print("roll",roll*180/np.pi)
+
+    pitch = 30 #73.34
+    yaw = -50 #37
+    roll = 42  #3.5
+
+    pitch *= np.pi/180
+    yaw *= np.pi/180
+    roll *= np.pi/180
+
+    Rx = np.matrix([
+    [1, 0,0],
+    [0, np.cos(pitch), -np.sin(pitch)],
+    [0, np.sin(pitch), np.cos(pitch)]
+    ])
+
+    Ry = np.matrix([
+    [np.cos(yaw), 0, np.sin(yaw)],
+    [0, 1, 0],
+    [-np.sin(yaw), 0, np.cos(yaw)]
+    ])
+
+    Rz = np.matrix([
+    [np.cos(roll), -np.sin(roll), 0],
+    [np.sin(roll), np.cos(roll), 0],
+    [0, 0, 1]
+    ])
+
+    Rrpy = Rx @ Ry @ Rz
+
+
 #homography equation
-if False:
-    # H = Rx - np.matmul(t,n.T)/d
-    H = np.matmul(np.matmul(K,Rx), np.linalg.inv(K))
+if True:
+    d = plane_eqn[3]
+    t = plane_center        #incorrect
+    print("n",n)
+    print("d",d)
+    print("t",t)
+    # n = np.array([0,1,0]).reshape((-1,1))
+    t = np.array([0, 20, 20]).reshape((-1,1))        #increase y component: move front, increase z: move higher,
+    # t = np.array([15, 20, 10]).reshape((-1,1))        #increase y component: move front, increase z: move higher,
+    H = R + np.matmul(t,n.T)/d
+    H = Rx @ Rz @ H
+    H = np.matmul(np.matmul(K,H), np.linalg.inv(K))
+    print(H)
 
 
+print("R",R)
+print("Rx",Rx)
 #warp
 dx = 0
-dy = 0
+dy = 500
 trans = np.array([
     [1, 0, dx],
     [0, 1, dy],
     [0, 0, 1]],
     dtype = "float32")
 
-warp = cv2.warpPerspective(im, trans @ M ,((1000,1000)))
-# warp = cv2.resize(warp,(int(warp.shape[1]/2),int(warp.shape[0]/2)))
+warp = cv2.warpPerspective(im, trans @ H,((3000,2000)))
+warp = cv2.resize(warp,(int(warp.shape[1]/2),int(warp.shape[0]/2)))
 
 cv2.imshow("warp",warp)
 cv2.waitKey()

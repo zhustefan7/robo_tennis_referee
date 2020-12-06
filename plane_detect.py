@@ -79,6 +79,7 @@ def main():
     print("fy", focal_left_y)
     print("cx", calibration_params.left_cam.cx)
     print("cy", calibration_params.left_cam.cy)
+    print("distortion", calibration_params.left_cam.disto)
 
     
 
