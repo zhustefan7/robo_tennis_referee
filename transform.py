@@ -1,10 +1,13 @@
 import numpy as np
+import sys
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv2 under python3
 import cv2
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 
 #load image
 # path = "/home/hcl/Documents/ZED/pics/Explorer_HD1080_SN14932_16-24-06.png"
 # path = "/home/hcl/Documents/ZED/pics/Explorer_HD720_SN14932_16-06-34.png"
-path = "/home/hcl/Downloads/ezgif-4-c946bbd8d6fe-png-split/ezgif-frame-036.png"
+path = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/video_frames/ezgif-frame-038.png'
 im = cv2.imread(path)
 h, w = im.shape[0], im.shape[1]
 print("orignal image shape", h,w)
@@ -225,5 +228,6 @@ warp = cv2.warpPerspective(im, trans @ H,((3000,2000)))
 warp = cv2.resize(warp,(int(warp.shape[1]/2),int(warp.shape[0]/2)))
 
 cv2.imshow("warp",warp)
+# cv2.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png", warp)
 cv2.waitKey()
 cv2.destroyAllWindows()

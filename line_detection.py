@@ -77,7 +77,8 @@ def cluster_lines(lines, all_lines_indices):
 
 
 def detect_line():
-    img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/Explorer_HD1080_SN14932_16-24-06.png'
+    # img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/video_frames/ezgif-frame-037.png'
+    img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
     plt_img = plt.imread(img_dir)
     img = cv2.imread( img_dir,0)
     img = img[:,0:1920]
@@ -107,9 +108,9 @@ def detect_line():
     all_lines_indices = np.linspace(0,len(lines)-1,len(lines), dtype= int)
     horizontal_lines, vertical_lines = cluster_lines(lines,all_lines_indices)
 
-    # for line in lines:
-    #     x1, y1, x2, y2 = line[0]
-    #     plt.plot([x1,x2],[y1,y2])
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        plt.plot([x1,x2],[y1,y2])
 
     # for i in range(len(cluster_labels)):
     #     if cluster_labels[i] == 2:
@@ -130,6 +131,7 @@ def detect_line():
             line2_coeff = calc_line_coeff(lines[line2_indx][0])
             intersect_p = np.cross(line1_coeff,line2_coeff)
             intersect_p = intersect_p / intersect_p[2]
+            # plt.scatter([intersect_p[0]],[ intersect_p[1]])
             if intersect_p[2]!= 0 and intersect_pnt_on_both_lines(lines, line1_indx, line2_indx, intersect_p):
             #     intersection_count+=1
             # if intersection_count>=3:
@@ -179,7 +181,7 @@ def detect_line():
 def intersect_pnt_on_both_lines(lines, line1_indx, line2_indx, intersect_p):
     xa_1, ya_1,xa_2,ya_2   = lines[line1_indx][0]
     xb_1, yb_1,xb_2,yb_2  = lines[line2_indx][0]
-    margin = 20
+    margin = 100
 
     if (intersect_p[0] > min(xa_1,xa_2)-margin) and (intersect_p[0] < max(xa_1,xa_2)+margin):
         if (intersect_p[1] > min(ya_1,ya_2)-margin) and (intersect_p[1] < max(ya_1,ya_2)+margin):

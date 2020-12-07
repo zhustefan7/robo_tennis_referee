@@ -7,16 +7,174 @@ import numpy as np
 import argparse
 import random as rng
 import imutils
+from corner_detection import*
 
 class Robo_Referee(object):
     def __init__(self,img_dir,court_w = 540, court_h = 780):
         self.src = cv.imread(img_dir)
-        margin = 60
-        # h, w = self.src.shape[0], self.src.shape[1]
-        # self.src = self.src[:,:int(w/2),:] 
-        self.src = self.src[:court_h+margin,:court_w+margin,:]   #crop the image
+        self.margin = 20
         self.line_contour = None
         self.ball_loc = None
+        self.H = np.eye(3)
+
+    
+
+    def get_BEV_transform(self):
+        pitch = 30 #73.34
+        yaw = -50 #37
+        roll = 42  #3.5
+
+        pitch *= np.pi/180
+        yaw *= np.pi/180
+        roll *= np.pi/180
+
+        Rx = np.matrix([
+        [1, 0,0],
+        [0, np.cos(pitch), -np.sin(pitch)],
+        [0, np.sin(pitch), np.cos(pitch)]
+        ])
+
+        Ry = np.matrix([
+        [np.cos(yaw), 0, np.sin(yaw)],
+        [0, 1, 0],
+        [-np.sin(yaw), 0, np.cos(yaw)]
+        ])
+
+        Rz = np.matrix([
+        [np.cos(roll), -np.sin(roll), 0],
+        [np.sin(roll), np.cos(roll), 0],
+        [0, 0, 1]
+        ])
+
+        Rrpy = Rx @ Ry @ Rz
+
+        n = np.array([-0.01750558, 0.95802116, 0.28616259]).reshape((-1,1))
+        plane_eqn = [-0.01750559,  0.95802122,  0.28616261,  1.69369471]
+        plane_center = np.array([ -0.55109537,   1.42110538, -10.71038818]).reshape((-1,1))
+
+
+        fx = 1427.2435302734375
+        fy = 1427.2435302734375
+        cx = 1037.1259765625
+        cy = 584.6063842773438
+
+        K = np.array([
+            [fx, 0, cx],
+            [0, fy, cy],
+            [0, 0, 1]])
+
+        a = np.array([0,1,0]).reshape((-1,1))
+        dot_prod = np.dot(a.flatten(), n.flatten())
+        cross_prod_norm = np.linalg.norm(np.cross(a.flatten(),n.flatten()))
+        G = np.array(
+            [[dot_prod, -cross_prod_norm, 0],
+            [cross_prod_norm, dot_prod, 0],
+            [0, 0, 1]])
+
+        u = a
+        v = ((n-dot_prod * a)/np.linalg.norm(n-dot_prod * a)).reshape((-1,1))
+        w = np.cross(n.flatten(),a.flatten()).reshape((-1,1))
+        F = np.concatenate([u,v,w],axis=1)
+        F = np.linalg.inv(F)
+
+        U = np.linalg.inv(F) @ G @ F
+        R = U
+
+        d = plane_eqn[3]
+        t = plane_center        #incorrect
+        # print("n",n)
+        # print("d",d)
+        # print("t",t)
+        # n = np.array([0,1,0]).reshape((-1,1))
+        t = np.array([0, 20, 20]).reshape((-1,1))        #increase y component: move front, increase z: move higher,
+        # t = np.array([15, 20, 10]).reshape((-1,1))        #increase y component: move front, increase z: move higher,
+        H = R + np.matmul(t,n.T)/d
+        H = Rx @ Rz @ H
+        H = np.matmul(np.matmul(K,H), np.linalg.inv(K))
+        # print(H)
+
+        dx = 0
+        dy = 500
+        trans = np.array([
+            [1, 0, dx],
+            [0, 1, dy],
+            [0, 0, 1]],
+            dtype = "float32")
+        
+        self.H = trans @ H
+
+        self.src = cv2.warpPerspective(self.src, trans @ H,((3000,2000)))
+        self.src = cv2.resize(self.src,(int(self.src.shape[1]/2),int(self.src.shape[0]/2)))
+
+
+
+        # cv.imshow("Frame", self.src)
+        # cv.waitKey()
+
+
+    def crop_img(self):
+        outer_contour = self.contour_detection()
+        x_array = []
+        y_array = []
+        for item in outer_contour:
+            x, y = item[0][0],item[0][1]
+            x_array.append(x)
+            y_array.append(y)
+        
+        min_idx =0 
+        max_idx =0
+        min_sum = 1000
+        max_sum =0
+        for i in range(len(x_array)):
+            sum = x_array[i] + y_array[i]
+            if sum > max_sum:
+                max_sum = sum
+                max_idx = i
+            if sum < min_sum:
+                min_sum = sum
+                min_idx = i 
+
+
+        min_x ,min_y = x_array[min_idx], y_array[min_idx]
+        # max_x ,max_y = x_array[max_idx], y_array[max_idx]
+
+    #     cv.circle(self.src, (int(min_x), int(min_y)), int(5),
+    # (0, 255, 255), 2)
+    #     cv.circle(self.src, (int(max_x), int(max_y)), int(5),
+    # (0, 255, 255), 2)
+
+        self.src = self.src[:,min_x:]
+
+        corners = detect_corners(self.src)
+        max_idx =0
+        max_sum =0
+        for i in range(len(corners)):
+            x,y = corners[i][0],corners[i][1]
+            sum = x+y
+            if sum > max_sum:
+                max_sum = sum
+                max_idx = i
+            
+
+
+
+        max_x, max_y = corners[max_idx][0],corners[max_idx][1]
+
+        # max_y_idx = np.argmax(corners[:,1])
+
+        # print(max_y_idx)
+        self.src = self.src[:int(max_y)+self.margin,:int(max_x)+self.margin]
+    #     for corner in corners:
+    #         x,y = corner[0],corner[1]
+    #         cv.circle(self.src, (int(x), int(y)), int(5),
+    # (0, 0, 255), 2)
+
+
+
+        # cv.imshow("Frame", self.src)
+        # cv.waitKey()
+
+
 
     def contour_detection(self):
         def thresh_callback(val):
@@ -45,14 +203,15 @@ class Robo_Referee(object):
         src_gray = cv.cvtColor(self.src, cv.COLOR_BGR2GRAY)
         src_gray = cv.blur(src_gray, (3,3))
         # Create Window
-        source_window = 'Source'
-        cv.namedWindow(source_window)
-        cv.imshow(source_window, self.src)
+        # source_window = 'Source'
+        # cv.namedWindow(source_window)
+        # cv.imshow(source_window, self.src)
         max_thresh = 255
         thresh = 74 # initial threshold
         # cv.createTrackbar('Canny Thresh:', source_window, thresh, max_thresh, thresh_callback)
         self.line_contour = thresh_callback(thresh)
         # cv.waitKey()
+        return thresh_callback(thresh)
     
     def ball_detection(self):
         greenLower = (0, 69, 0)
@@ -142,11 +301,28 @@ class Robo_Referee(object):
 
 
 
-        
-img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
-robo_referee =Robo_Referee(img_dir)
-robo_referee.contour_detection()
 
+        
+img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/video_frames/ezgif-frame-036.png'
+robo_referee =Robo_Referee(img_dir)
+robo_referee.BEV_transform()
+robo_referee.crop_img()
+robo_referee.contour_detection()
 robo_referee.ball_detection()
-ball_in = robo_referee.line_judge()
-print(ball_in)
+
+if robo_referee.ball_loc != None:
+    ball_in = robo_referee.line_judge()
+
+    if ball_in:
+        print("Ball is in!!")
+    else:
+        print("Ball is out!")
+else:
+    print("No ball is detected")
+
+
+
+
+
+if __name__ == "__main__":
+    img_dir = 

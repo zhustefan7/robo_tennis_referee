@@ -43,6 +43,7 @@ if src is None:
 # Convert image to gray and blur it
 src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
 src_gray = cv.blur(src_gray, (3,3))
+# _,src_gray = cv.threshold(src_gray,160,255,cv.THRESH_BINARY)
 # Create Window
 source_window = 'Source'
 cv.namedWindow(source_window)
