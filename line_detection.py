@@ -86,7 +86,7 @@ def detect_line():
 
 
     # Convert the image to gray-scale
-    _,gray = cv2.threshold(img,180,255,cv2.THRESH_BINARY)
+    _,gray = cv2.threshold(img,100,255,cv2.THRESH_BINARY)
 
     # _,gray = cv2.threshold(img,120,255,cv2.THRESH_BINARY)
     cv2.imshow('gray',gray)
@@ -102,7 +102,7 @@ def detect_line():
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
     # Detect points that form a line
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 120, minLineLength=30, maxLineGap=10)
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 120, minLineLength=10, maxLineGap=10)
     # lines = cv2.HoughLinesP(edges, 1, np.pi/180, 30, minLineLength=250, maxLineGap=30)
     # lines = cv2.HoughLinesP(edges, 1, np.pi/180, 50, minLineLength=150, maxLineGap=10)
     all_lines_indices = np.linspace(0,len(lines)-1,len(lines), dtype= int)
@@ -168,7 +168,7 @@ def detect_line():
                             if dist < dist_thresh:
                                 satisfied_line_count +=1
                                 satisfied_lines.append(j)
-        
+                    plt.scatter([intersect_p[0]],[ intersect_p[1]])
                     if satisfied_line_count > satisfied_line_thresh:
                         print(satisfied_lines)
                         # all_lines_indices = np.delete(all_lines_indices, np.array(satisfied_lines))
@@ -181,7 +181,7 @@ def detect_line():
 def intersect_pnt_on_both_lines(lines, line1_indx, line2_indx, intersect_p):
     xa_1, ya_1,xa_2,ya_2   = lines[line1_indx][0]
     xb_1, yb_1,xb_2,yb_2  = lines[line2_indx][0]
-    margin = 100
+    margin = 1000
 
     if (intersect_p[0] > min(xa_1,xa_2)-margin) and (intersect_p[0] < max(xa_1,xa_2)+margin):
         if (intersect_p[1] > min(ya_1,ya_2)-margin) and (intersect_p[1] < max(ya_1,ya_2)+margin):

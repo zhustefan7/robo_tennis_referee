@@ -23,12 +23,13 @@ cv2.createTrackbar('highS','image',255,255,nothing)
 cv2.createTrackbar('lowV','image',0,255,nothing)
 cv2.createTrackbar('highV','image',255,255,nothing)
  
-img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
+img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/HD720_SN14932_16-42-54/left000459.png'
+# img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
 
 while True:
     frame = cv2.imread(img_dir)
     h, w = frame.shape[0], frame.shape[1]
-    frame = frame[:,:int(w/2),:] 
+    # frame = frame[:,:int(w/2),:] 
     frame = cv2.resize(frame,(500,500))
  
     # get current positions of the trackbars
