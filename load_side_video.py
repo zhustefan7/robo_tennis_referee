@@ -72,7 +72,7 @@ while ret == True:
     # ball_detection(frame)
 
     # save frames
-    if True:
+    if False:
         cv.imwrite(video_name+"_"+"{:03d}".format(frame_num)+".png",frame)
     
     if cv.waitKey(25) & 0xFF == ord('q'):
