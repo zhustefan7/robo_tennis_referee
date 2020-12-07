@@ -37,9 +37,10 @@ def main():
     frame_num = 1
 
     print(imgs)
+    robo_referee =Robo_Referee()
     for img in imgs:
+        robo_referee.get_image(data_path+img)
 
-        robo_referee =Robo_Referee(data_path+img)
         robo_referee.apply_homography()
         # robo_referee.get_BEV_transform()
         robo_referee.crop_img()

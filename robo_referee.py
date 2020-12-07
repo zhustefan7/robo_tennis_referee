@@ -10,8 +10,8 @@ import imutils
 from corner_detection import*
 
 class Robo_Referee(object):
-    def __init__(self,img_dir,court_w = 540, court_h = 780):
-        self.src = cv.imread(img_dir)
+    def __init__(self,court_w = 540, court_h = 780):
+        self.src = None
         self.margin = 50
         self.line_contour = None
         self.ball_loc = None
@@ -19,8 +19,13 @@ class Robo_Referee(object):
                             [-6.04181600e-16, -4.26827321e+00  ,1.46828599e+03],
                             [ 2.34038280e-05 ,-3.67005039e-03  ,1.00000000e+00]]
                             )
-
+        self.min_x_1 = None
+        self.min_y_1 = None
+        self.max_x_2 = None
+        self.max_y_2 = None
     
+    def get_image(self,img_dir):
+        self.src = cv.imread(img_dir)
 
     def get_BEV_transform(self):
         pitch = 80 #73.34
@@ -156,25 +161,29 @@ class Robo_Referee(object):
                 min_idx = i 
 
 
-        min_x ,min_y = x_array[min_idx], y_array[min_idx]
-        # max_x ,max_y = x_array[max_idx], y_array[max_idx]
-        max_y = max(y_array)
+        if self.min_x_1 == None:
+            self.min_x_1 ,self.min_y_1 = x_array[min_idx], y_array[min_idx]
+            # max_x ,max_y = x_array[max_idx], y_array[max_idx]
+            self.max_y_1 = max(y_array)
 
-    #     cv.circle(self.src, (int(min_x), int(min_y)), int(5),
-    # (0, 255, 255), 2)
-    #     cv.circle(self.src, (int(max_x), int(max_y)), int(5),
-    # (0, 255, 255), 2)
+        #     cv.circle(self.src, (int(min_x), int(min_y)), int(5),
+        # (0, 255, 255), 2)
+        #     cv.circle(self.src, (int(max_x), int(max_y)), int(5),
+        # (0, 255, 255), 2)
 
-        self.src = self.src[:max_y,min_x:]
+            self.src = self.src[:self.max_y_1,self.min_x_1:]
 
-        # cv.imshow("Frame", self.src)
-        # cv.waitKey()
-        # cv2.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png", self.src)
+            # cv.imshow("Frame", self.src)
+            # cv.waitKey()
+            # cv2.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png", self.src)
 
-        max_x, max_y = detect_lines(self.src)
+            self.max_x_2, self.max_y_2 = detect_lines(self.src)
 
 
-        self.src = self.src[:int(max_y)+self.margin,:int(max_x)+self.margin+20]
+            self.src = self.src[:int(self.max_y_2)+self.margin,:int(self.max_x_2)+self.margin+20]
+        else:
+            self.src = self.src[:self.max_y_1,self.min_x_1:]
+            self.src = self.src[:int(self.max_y_2)+self.margin,:int(self.max_x_2)+self.margin+20]
 
         # cv.imshow("Frame", self.src)
         # cv.waitKey()
@@ -259,52 +268,22 @@ class Robo_Referee(object):
                 #     (0, 0, 255), 2)
                 # cv.circle(self.src, center, 5, (0, 0, 255), -1)
                 self.ball_loc = center
+            else:
+                self.ball_loc = None
         # cv.imshow("Frame", mask)
         # cv.imshow("Frame", self.src)
         # cv.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/presentation_imgs/11_2_1080HD/38_warped.png", self.src)
         # cv.waitKey()
         # cv.destroyAllWindows()
     
+
+
     def line_judge(self):
-        x_array = []
-        y_array = []
-        for item in self.line_contour:
-            x, y = item[0][0],item[0][1]
-            x_array.append(x)
-            y_array.append(y)
-        
-        min_idx =0 
-        max_idx =0
-        min_sum = 1000
-        max_sum =0
-        for i in range(len(x_array)):
-            sum = x_array[i] + y_array[i]
-            if sum > max_sum:
-                max_sum = sum
-                max_idx = i
-            if sum < min_sum:
-                min_sum = sum
-                min_idx = i 
-
-
-        min_x ,min_y = x_array[min_idx], y_array[min_idx]
-        max_x ,max_y = x_array[max_idx], y_array[max_idx]
-
-
         ball_x ,ball_y = self.ball_loc[0], self.ball_loc[1]
-
-
-
-    #     cv.circle(self.src, (int(min_x), int(min_y)), int(5),
-    # (0, 255, 255), 2)
-    #     cv.circle(self.src, (int(max_x), int(max_y)), int(5),
-    # (0, 255, 255), 2)
-    #     cv.imshow("Frame", self.src)
-    #     cv.waitKey()
-
-        if ball_x > min_x  and ball_x < max_x and ball_y > min_y and ball_y<max_y:
+        if ball_x > self.min_x_1  and ball_x < self.max_x_2 and ball_y > self.min_y_1 and ball_y<self.max_y_2:
             return True
         return False
+
 
 
 
