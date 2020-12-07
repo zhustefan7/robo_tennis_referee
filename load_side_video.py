@@ -10,6 +10,11 @@ import time
 # data_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54/"
 
 def ball_detection(src):
+    #for serving    
+    # greenLower = (0, 65, 154)
+    # greenUpper = (63, 255, 255)
+    
+    #for side view
     greenLower = (0, 64, 142)
     greenUpper = (95, 255, 255)
     blurred = cv.GaussianBlur(src, (11, 11), 0)
@@ -49,12 +54,19 @@ def ball_detection(src):
             cv.circle(src, center, 5, (0, 0, 255), -1)
             ball_loc = center
     # cv.imshow("Frame", mask)
-    cv.imshow("Frame", src)
-    cv.waitKey(1)
+    # cv.imshow("Frame", src)
+    # cv.waitKey(1)
     return center,src
     
 
+use_vid = True
 
+if use_vid:
+    # video_path = "/home/hcl/Documents/ZED/11-2020_videos/HD1080_SN14932_16-37-43.avi"
+    video_path = "/home/hcl/Documents/ZED/11-2020_videos/HD1080_SN14932_16-31-32.avi"
+    cap = cv.VideoCapture(video_path)
+    if (cap.isOpened()== False):
+        print("Error opening video stream or file")
 
 #detect ball with images
 side_img_path = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/side_img/"
@@ -72,14 +84,29 @@ scale = 10
 ball_loc_prev = None
 ball_loc = None
 contact_loc = None
-for img in imgs:
-    side_img = cv.imread(side_img_path+img)
+i = 0
+
+
+
+ret = True
+while ret == True:
+    if use_vid:
+        print("frame",i)
+        ret, side_img = cap.read()
+        i += 1    
+    
+    else:
+        # for img in imgs:
+        side_img = cv.imread(side_img_path+imgs[i])
+        i+=1
+            
     side_img = cv.rotate(side_img, cv.ROTATE_90_CLOCKWISE)
     side_img = cv.resize(side_img,(int(side_img.shape[1]/2),int(side_img.shape[0]/2)))
     ball_loc,side_img = ball_detection(side_img)
     # print("ball loc",ball_loc)
     # print("prev ball loc", ball_loc_prev)
     
+    print(ball_loc)
     #calculate velocity vector and plot
     if ball_loc != None and ball_loc_prev != None:
         velocity_vec = tuple(map(lambda i, j: (i - j), ball_loc, ball_loc_prev))
@@ -92,7 +119,10 @@ for img in imgs:
             color=(255,0,0), thickness=3) 
 
         # frame when ball touches ground
-        velocity_slope = velocity_vec[1]/velocity_vec[0]
+        if velocity_vec[0] == 0:
+            velocity_slope = np.inf
+        else:
+            velocity_slope = velocity_vec[1]/velocity_vec[0]
         # print(velocity_slope)
         if contact_loc == None and velocity_slope >= 0:
             contact_loc = ball_loc_prev
@@ -103,7 +133,10 @@ for img in imgs:
     ball_loc_prev = ball_loc
 
     cv.imshow("Frame", side_img)
-    cv.waitKey(1)
+    cv.waitKey()
+
+    if cv.waitKey(25) & 0xFF == ord('q'):
+        break
 
 
 

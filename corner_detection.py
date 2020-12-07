@@ -1,8 +1,8 @@
 from __future__ import print_function
 import sys
-sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv2 under python3
+# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv2 under python3
 import cv2 
-sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
+# sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
 import argparse
 import math
@@ -204,7 +204,7 @@ def detect_lines(img):
     # return corners
 
 
-img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
-src = cv2.imread(img_dir)
-detect_lines(src)
-# detect_corners(src)
+# img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
+# src = cv2.imread(img_dir)
+# detect_lines(src)
+# # detect_corners(src)

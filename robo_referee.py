@@ -1,8 +1,8 @@
 import numpy as np
 import sys
-sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
+# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
 import cv2 as cv
-sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
+# sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
 import argparse
 import random as rng
@@ -23,10 +23,28 @@ class Robo_Referee(object):
         self.min_y_1 = None
         self.max_x_2 = None
         self.max_y_2 = None
-    
-    def get_image(self,img_dir):
-        self.src = cv.imread(img_dir)
 
+        #ball detection HSV thresh
+        self.greenLower_front = (0, 69, 0)
+        self.greenUpper_front = (79, 255, 255)
+
+        self.greenLower_side = (0, 64, 142)
+        self.greenUpper_side = (95, 255, 255)
+
+        #for side view
+        self.fps = 60
+        self.vel_scale = 10
+        self.contact_loc = None
+        self.side_ball_loc = None
+        self.side_ball_loc_prev = None
+
+    def get_image(self, img_dir, side_img_dir):
+        self.src = cv.imread(img_dir)       #modified by pipeline
+        self.orig = cv.imread(img_dir)
+        self.side_img = cv.imread(side_img_dir)
+        self.side_img = cv.rotate(self.side_img, cv.ROTATE_90_CLOCKWISE)
+        self.side_img = cv.resize(self.side_img,(int(self.side_img.shape[1]/2),int(self.side_img.shape[0]/2)))
+    
     def get_BEV_transform(self):
         pitch = 80 #73.34
         yaw = -50 #37
@@ -229,16 +247,15 @@ class Robo_Referee(object):
         self.line_contour = thresh_callback(thresh)
         return thresh_callback(thresh)
     
-    def ball_detection(self):
-        greenLower = (0, 69, 0)
-        greenUpper = (79, 255, 255)
-        blurred = cv.GaussianBlur(self.src, (11, 11), 0)
+    def ball_detection(self,img,ball_loc,thresh_low,thresh_high):
+        
+        blurred = cv.GaussianBlur(img, (11, 11), 0)
         hsv = cv.cvtColor(blurred, cv.COLOR_BGR2HSV)
-        print(hsv.shape)
+        # print(hsv.shape)
         # construct a mask for the color "green", then perform
         # a series of dilations and erosions to remove any small
         # blobs left in the mask
-        mask = cv.inRange(hsv, greenLower, greenUpper)
+        mask = cv.inRange(hsv, thresh_low, thresh_high)
         mask = cv.erode(mask, None, iterations=2)
         mask = cv.dilate(mask, None, iterations=2)
         # cv.imshow("Frame", output)
@@ -267,9 +284,10 @@ class Robo_Referee(object):
                 # cv.circle(self.src, (int(x), int(y)), int(radius),
                 #     (0, 0, 255), 2)
                 # cv.circle(self.src, center, 5, (0, 0, 255), -1)
-                self.ball_loc = center
+                ball_loc = center
             else:
-                self.ball_loc = None
+                ball_loc = None
+        return ball_loc
         # cv.imshow("Frame", mask)
         # cv.imshow("Frame", self.src)
         # cv.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/presentation_imgs/11_2_1080HD/38_warped.png", self.src)
@@ -285,7 +303,36 @@ class Robo_Referee(object):
         return False
 
 
+    def velocity_calc(self, img, ball_loc, ball_loc_prev, thresh_low, thresh_high):
+        ball_loc = self.ball_detection(img, ball_loc, thresh_low, thresh_high)
+        velocity = 0
+        
+        #calculate velocity vector and plot
+        if ball_loc != None and ball_loc_prev != None:
+            velocity_vec = tuple(map(lambda i, j: (i - j), ball_loc, ball_loc_prev))
+            # print(velocity_vec)
+            velocity = np.linalg.norm(np.array(velocity_vec)/(1/self.fps))
+            print("velocity:",velocity)
+            img = cv.arrowedLine(
+                img,
+                pt1=ball_loc,
+                pt2=tuple(map(lambda i, j: i + j*self.vel_scale, ball_loc, velocity_vec)),
+                color=(255,0,0), thickness=3) 
 
+            # frame when ball touches ground
+            if velocity_vec[0] == 0:
+                velocity_slope = np.inf
+            else:
+                velocity_slope = velocity_vec[1]/velocity_vec[0]
+            # print(velocity_slope)
+            if self.contact_loc == None and velocity_slope >= 0:
+                self.contact_loc = ball_loc_prev
+            if self.contact_loc != None:
+                cv.circle(img, self.contact_loc, 10, (0, 0, 255),-1)
+            # print(self.contact_loc)
+
+        ball_loc_prev = ball_loc
+        return img, ball_loc, ball_loc_prev, velocity
 
 
 
