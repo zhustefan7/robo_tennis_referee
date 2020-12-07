@@ -163,7 +163,6 @@ class Robo_Referee(object):
         # max_y_idx = np.argmax(corners[:,1])
 
         # print(max_y_idx)
-        self.src = self.src[:int(max_y)+self.margin,:int(max_x)+self.margin]
     #     for corner in corners:
     #         x,y = corner[0],corner[1]
     #         cv.circle(self.src, (int(x), int(y)), int(5),
@@ -171,8 +170,12 @@ class Robo_Referee(object):
 
 
 
-        # cv.imshow("Frame", self.src)
-        # cv.waitKey()
+    #     cv.imshow("Frame", self.src)
+    #     cv.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/presentation_imgs/11_2_1080HD/38_corners.png", self.src)
+
+    #     cv.waitKey()
+
+        self.src = self.src[:int(max_y)+self.margin,:int(max_x)+self.margin]
 
 
 
@@ -196,8 +199,10 @@ class Robo_Referee(object):
                 # print(len(contours[i]))
             color = (rng.randint(0,256), rng.randint(0,256), rng.randint(0,256))
             # cv.drawContours(drawing, contours, max_contour_idx, color, 2, cv.LINE_8, hierarchy, 0)
-            # # # Show in a window
+            # # Show in a window
             # cv.imshow('Contours', drawing)
+            # cv.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/presentation_imgs/11_2_1080HD/38_contours.png", drawing)
+
             return contours[max_contour_idx]
 
         src_gray = cv.cvtColor(self.src, cv.COLOR_BGR2GRAY)
@@ -210,7 +215,7 @@ class Robo_Referee(object):
         thresh = 74 # initial threshold
         # cv.createTrackbar('Canny Thresh:', source_window, thresh, max_thresh, thresh_callback)
         self.line_contour = thresh_callback(thresh)
-        # cv.waitKey()
+        cv.waitKey()
         return thresh_callback(thresh)
     
     def ball_detection(self):
@@ -248,13 +253,14 @@ class Robo_Referee(object):
             if radius > 5:
                 # draw the circle and centroid on the frame,
                 # then update the list of tracked points
-                cv.circle(self.src, (int(x), int(y)), int(radius),
-                    (0, 255, 255), 2)
-                cv.circle(self.src, center, 5, (0, 0, 255), -1)
+                # cv.circle(self.src, (int(x), int(y)), int(radius),
+                #     (0, 0, 255), 2)
+                # cv.circle(self.src, center, 5, (0, 0, 255), -1)
                 self.ball_loc = center
         # cv.imshow("Frame", mask)
-        cv.imshow("Frame", self.src)
-        cv.waitKey()
+        # cv.imshow("Frame", self.src)
+        # cv.imwrite("/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/presentation_imgs/11_2_1080HD/38_warped.png", self.src)
+        # cv.waitKey()
         # cv.destroyAllWindows()
     
     def line_judge(self):
@@ -303,26 +309,31 @@ class Robo_Referee(object):
 
 
         
-img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/video_frames/ezgif-frame-036.png'
+img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/video_frames/ezgif-frame-038.png'
 robo_referee =Robo_Referee(img_dir)
-robo_referee.BEV_transform()
+robo_referee.get_BEV_transform()
 robo_referee.crop_img()
 robo_referee.contour_detection()
 robo_referee.ball_detection()
 
 if robo_referee.ball_loc != None:
     ball_in = robo_referee.line_judge()
-
+    x , y = robo_referee.ball_loc[0], robo_referee.ball_loc[1]
     if ball_in:
+        cv.circle(robo_referee.src, (int(x), int(y)), int(10),
+        (0, 0, 255), 2)
         print("Ball is in!!")
     else:
+        cv.circle(robo_referee.src, (int(x), int(y)), int(10),
+        (0, 255, 255), 2)
         print("Ball is out!")
 else:
     print("No ball is detected")
 
+cv.imshow("Frame", robo_referee.src)
+cv.waitKey()
 
 
 
-
-if __name__ == "__main__":
-    img_dir = 
+# if __name__ == "__main__":
+#     img_dir = 
