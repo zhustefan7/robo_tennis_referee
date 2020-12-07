@@ -1,4 +1,3 @@
-import torch
 import argparse
 import os
 import numpy as np
@@ -8,13 +7,14 @@ import imutils
 import cv2 as cv
 import time
 
+# data_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54/"
 
 def ball_detection(src):
-    greenLower = (0, 69, 0)
-    greenUpper = (79, 255, 255)
+    greenLower = (0, 64, 142)
+    greenUpper = (95, 255, 255)
     blurred = cv.GaussianBlur(src, (11, 11), 0)
     hsv = cv.cvtColor(blurred, cv.COLOR_BGR2HSV)
-    print(hsv.shape)
+    # print(hsv.shape)
     # construct a mask for the color "green", then perform
     # a series of dilations and erosions to remove any small
     # blobs left in the mask
@@ -51,33 +51,88 @@ def ball_detection(src):
     # cv.imshow("Frame", mask)
     cv.imshow("Frame", src)
     cv.waitKey(1)
+    return center,src
     
 
-video_name = "20201206_164251"
-video_path = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/20201206_164251.mp4"
-# video_path = "side.mp4"
-cap = cv.VideoCapture(video_path)
-frame_num = 0
-if (cap.isOpened()== False):
-  print("Error opening video stream or file")
- 
-ret = True
-while ret == True:
-    ret, frame = cap.read()    
-    frame_num += 1
-    print(frame_num)
-    # cv2.imshow('Frame', frame)
-    
-    
-    # ball_detection(frame)
 
-    # save frames
-    if False:
-        cv.imwrite(video_name+"_"+"{:03d}".format(frame_num)+".png",frame)
-    
-    if cv.waitKey(25) & 0xFF == ord('q'):
-        break
 
- 
-cap.release()
-cv.destroyAllWindows()
+#detect ball with images
+side_img_path = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/side_img/"
+files = os.listdir(side_img_path)
+imgs =[]
+labels =[]
+
+for file in files:
+    if file.endswith('.png'):
+        imgs.append(file)
+imgs = sorted(imgs)
+
+fps = 60
+scale = 10
+ball_loc_prev = None
+ball_loc = None
+contact_loc = None
+for img in imgs:
+    side_img = cv.imread(side_img_path+img)
+    side_img = cv.rotate(side_img, cv.ROTATE_90_CLOCKWISE)
+    side_img = cv.resize(side_img,(int(side_img.shape[1]/2),int(side_img.shape[0]/2)))
+    ball_loc,side_img = ball_detection(side_img)
+    # print("ball loc",ball_loc)
+    # print("prev ball loc", ball_loc_prev)
+    
+    #calculate velocity vector and plot
+    if ball_loc != None and ball_loc_prev != None:
+        velocity_vec = tuple(map(lambda i, j: (i - j), ball_loc, ball_loc_prev))
+        # print(velocity_vec)
+        print("velocity:",np.linalg.norm(np.array(velocity_vec)/1/60))
+        side_img = cv.arrowedLine(
+            side_img,
+            pt1=ball_loc,
+            pt2=tuple(map(lambda i, j: i + j*scale, ball_loc, velocity_vec)),
+            color=(255,0,0), thickness=3) 
+
+        # frame when ball touches ground
+        velocity_slope = velocity_vec[1]/velocity_vec[0]
+        # print(velocity_slope)
+        if contact_loc == None and velocity_slope >= 0:
+            contact_loc = ball_loc_prev
+        if contact_loc != None:
+            cv.circle(side_img, contact_loc, 10, (0, 0, 255),-1)
+        # print(contact_loc)
+
+    ball_loc_prev = ball_loc
+
+    cv.imshow("Frame", side_img)
+    cv.waitKey(1)
+
+
+
+
+
+#load video, save frames
+if False:
+    video_name = "20201206_164251"
+    video_path = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/20201206_164251.mp4"
+    # video_path = "side.mp4"
+    cap = cv.VideoCapture(video_path)
+    frame_num = 0
+    if (cap.isOpened()== False):
+        print("Error opening video stream or file")
+    
+    ret = True
+    while ret == True:
+        ret, frame = cap.read()    
+        frame_num += 1
+        print(frame_num)
+        # cv2.imshow('Frame', frame)
+        
+        # save frames
+        if True:
+            cv.imwrite(video_name+"_"+"{:03d}".format(frame_num)+".png",frame)
+        
+        if cv.waitKey(25) & 0xFF == ord('q'):
+            break
+
+    
+    cap.release()
+    cv.destroyAllWindows()
