@@ -7,8 +7,6 @@ import imutils
 import cv2 as cv
 import time
 
-# data_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54/"
-
 def ball_detection(src):
     #for serving    
     # greenLower = (0, 65, 154)

@@ -32,6 +32,7 @@ class Robo_Referee(object):
         self.greenUpper_side = (95, 255, 255)
 
         #for side view
+        self.baseline_width = 0.005
         self.fps = 60
         self.vel_scale = 10
         self.contact_loc = None
@@ -311,7 +312,7 @@ class Robo_Referee(object):
         if ball_loc != None and ball_loc_prev != None:
             velocity_vec = tuple(map(lambda i, j: (i - j), ball_loc, ball_loc_prev))
             # print(velocity_vec)
-            velocity = np.linalg.norm(np.array(velocity_vec)/(1/self.fps))
+            velocity = np.linalg.norm(np.array(velocity_vec)/(1/self.fps)*self.baseline_width/10)
             print("velocity:",velocity)
             img = cv.arrowedLine(
                 img,

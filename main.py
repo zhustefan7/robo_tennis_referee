@@ -15,41 +15,38 @@ import os
 
 def main():
     # data_path = "/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/HD720_SN14932_16-42-54/"
-    data_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54_sync/"
+    front_left_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54_sync_left/"
+    front_right_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54_sync_right/"
     side_img_path = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/side_img/"
-    files = os.listdir(data_path)
-    imgs =[]
-    labels =[]
 
-    for file in files:
-        if file.endswith('.png'):
-            imgs.append(file)
-    imgs = sorted(imgs)
-
-    for file in files:
-        if file.endswith('.txt'):
-            labels.append(file)
-    imgs = sorted(imgs)
-    labels = sorted(labels)
-
-
+    left_files = os.listdir(front_left_path)
+    right_files = os.listdir(front_right_path)
     side_files = os.listdir(side_img_path)
+    left_imgs =[]
+    right_imgs = []
     side_imgs =[]
+
+    for file in left_files:
+        if file.endswith('.png'):
+            left_imgs.append(file)
+    left_imgs = sorted(left_imgs)
+
+    for file in right_files:
+        if file.endswith('.png'):
+            right_imgs.append(file)
+    right_imgs = sorted(right_imgs)
     
     for file in side_files:
         if file.endswith('.png'):
             side_imgs.append(file)
     side_imgs = sorted(side_imgs)
 
-    # Need to Change this number for different classes
-    class_label =0
     frame_num = 1
-
-    robo_referee =Robo_Referee()
-    for img,side_img in zip(imgs,side_imgs):
+    robo_referee = Robo_Referee()
+    for left_img, right_img, side_img in zip(left_imgs, right_imgs, side_imgs):
         print("frame",frame_num)
         frame_num+=1
-        robo_referee.get_image(data_path+img,side_img_path+side_img)
+        robo_referee.get_image(front_left_path+left_img,side_img_path+side_img)
 
         #side view
         robo_referee.side_img, robo_referee.side_ball_loc, robo_referee.side_ball_loc_prev, robo_referee.side_velocity = robo_referee.velocity_calc(
@@ -79,9 +76,9 @@ def main():
         
         if cv2.waitKey() == ord('q'):
             break
-        cv.imshow("Orig Frame",robo_referee.orig)
+        # cv.imshow("Orig Frame",robo_referee.orig)
         cv.imshow("Warped Frame", robo_referee.src)
-        cv.imshow("Side Frame",robo_referee.side_img)
+        # cv.imshow("Side Frame",robo_referee.side_img)
         cv.waitKey()
         
 
