@@ -1,8 +1,8 @@
 import numpy as np
 import sys
-sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
+# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
 import cv2 as cv
-sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
+# sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
 import argparse
 import random as rng
@@ -11,6 +11,8 @@ from corner_detection import*
 
 class Robo_Referee(object):
     def __init__(self,court_w = 540, court_h = 780):
+        self.baseline = 0.120 #m, distance between ZED cameras
+        self.f = 692.27880859375 #focal length 720HD
         self.src = None
         self.margin = 50
         self.line_contour = None
@@ -32,19 +34,20 @@ class Robo_Referee(object):
         self.greenUpper_side = (95, 255, 255)
 
         #for side view
-        self.baseline_width = 0.005
+        self.line_width = 0.005
         self.fps = 60
         self.vel_scale = 10
         self.contact_loc = None
         self.side_ball_loc = None
         self.side_ball_loc_prev = None
 
-    def get_image(self, img_dir, side_img_dir):
-        self.src = cv.imread(img_dir)       #modified by pipeline
-        self.orig = cv.imread(img_dir)
+    def get_image(self, left_img_dir, right_img_dir, side_img_dir):
+        self.src = cv.imread(left_img_dir)       #modified by pipeline
+        self.orig = cv.imread(left_img_dir)
         self.side_img = cv.imread(side_img_dir)
         self.side_img = cv.rotate(self.side_img, cv.ROTATE_90_CLOCKWISE)
         self.side_img = cv.resize(self.side_img,(int(self.side_img.shape[1]/2),int(self.side_img.shape[0]/2)))
+        self.right_img = cv.imread(right_img_dir)
         self.ball_loc = None
     
     def get_BEV_transform(self):
@@ -249,8 +252,8 @@ class Robo_Referee(object):
         self.line_contour = thresh_callback(thresh)
         return thresh_callback(thresh)
     
-    def ball_detection(self,img,ball_loc,thresh_low,thresh_high):
-        
+    def ball_detection(self,img,thresh_low,thresh_high):
+        ball_loc = None
         blurred = cv.GaussianBlur(img, (11, 11), 0)
         hsv = cv.cvtColor(blurred, cv.COLOR_BGR2HSV)
         # print(hsv.shape)
@@ -303,14 +306,14 @@ class Robo_Referee(object):
 
 
     def velocity_calc(self, img, ball_loc, ball_loc_prev, thresh_low, thresh_high):
-        ball_loc = self.ball_detection(img, ball_loc, thresh_low, thresh_high)
+        ball_loc = self.ball_detection(img, thresh_low, thresh_high)
         velocity = 0
         
         #calculate velocity vector and plot
         if ball_loc != None and ball_loc_prev != None:
             velocity_vec = tuple(map(lambda i, j: (i - j), ball_loc, ball_loc_prev))
             # print(velocity_vec)
-            velocity = np.linalg.norm(np.array(velocity_vec)/(1/self.fps)*self.baseline_width/10)
+            velocity = np.linalg.norm(np.array(velocity_vec)/(1/self.fps)*self.line_width/10)
             print("velocity:",velocity)
             img = cv.arrowedLine(
                 img,
