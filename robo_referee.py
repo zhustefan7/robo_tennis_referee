@@ -37,6 +37,9 @@ class Robo_Referee(object):
         self.contact_loc = None
         self.side_ball_loc = None
         self.side_ball_loc_prev = None
+        self.front_contact_loc = None
+        self.top_contact_loc = None
+        
 
     def get_image(self, img_dir, side_img_dir):
         self.src = cv.imread(img_dir)       #modified by pipeline

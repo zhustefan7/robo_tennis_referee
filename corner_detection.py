@@ -1,8 +1,8 @@
 from __future__ import print_function
 import sys
-# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv2 under python3
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv2 under python3
 import cv2 
-# sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
 import argparse
 import math
@@ -60,8 +60,8 @@ def detect_corners(img):
     # Convert the image to gray-scale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _,gray = cv2.threshold(gray,140,255,cv2.THRESH_BINARY)
-    # img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
-    # plt_img = plt.imread(img_dir)
+    img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
+    plt_img = plt.imread(img_dir)
 
     # _,gray = cv2.threshold(img,120,255,cv2.THRESH_BINARY)
     # cv2.imshow('gray',gray)
@@ -83,9 +83,9 @@ def detect_corners(img):
     all_lines_indices = np.linspace(0,len(lines)-1,len(lines), dtype= int)
     horizontal_lines, vertical_lines = cluster_lines(lines,all_lines_indices)
 
-    # for line in lines:
-    #     x1, y1, x2, y2 = line[0]
-    #     plt.plot([x1,x2],[y1,y2])
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        plt.plot([x1,x2],[y1,y2])
 
     # for i in range(len(cluster_labels)):
     #     if cluster_labels[i] == 2:
@@ -116,8 +116,8 @@ def detect_corners(img):
             #     intersection_pnts.append(intersect_p)
                 corners.append([intersect_p[0],intersect_p[1]])
                 plt.scatter([intersect_p[0]],[ intersect_p[1]])
-    # plt.imshow(plt_img)
-    # plt.show()
+    plt.imshow(plt_img)
+    plt.show()
     return corners
 
 def detect_lines(img):
@@ -206,5 +206,5 @@ def detect_lines(img):
 
 # img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
 # src = cv2.imread(img_dir)
-# detect_lines(src)
-# # detect_corners(src)
+# # detect_lines(src)
+# detect_corners(src)
