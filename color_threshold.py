@@ -1,7 +1,7 @@
 import sys
-# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
 import cv2 
-# sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
  
 def nothing(x):
@@ -23,9 +23,9 @@ cv2.createTrackbar('highS','image',255,255,nothing)
 cv2.createTrackbar('lowV','image',0,255,nothing)
 cv2.createTrackbar('highV','image',255,255,nothing)
  
-# img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/HD720_SN14932_16-42-54/left000459.png'
+img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/HD720_SN14932_16-42-54_sync/left000406.png'
 # img_dir = '/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/warped.png'
-img_dir = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/side_img/20201206_164251_375.png"
+# img_dir = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/side_img/20201206_164251_375.png"
 
 video_path = "/home/hcl/Documents/ZED/11-2020_videos/HD1080_SN14932_16-31-32.avi"
 frame_num = 145     #frame of video to tune

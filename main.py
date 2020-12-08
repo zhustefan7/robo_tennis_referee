@@ -1,8 +1,8 @@
 import numpy as np
 import sys
-# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
 import cv2 as cv
-# sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
 import argparse
 import random as rng
@@ -14,23 +14,17 @@ import os
 
 
 def main():
-    # data_path = "/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/HD720_SN14932_16-42-54/"
-    data_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54_sync/"
-    side_img_path = "/home/hcl/Desktop/GeoVis_Project_Tennis_Tracker/side_img/"
+    data_path = "/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/HD720_SN14932_16-42-54_sync/"
+    # data_path = "/home/hcl/Documents/ZED/12-2020videos/HD720_SN14932_16-42-54_sync/"
+    side_img_path = "/home/stefanzhu/Documents/2020_Fall/16877_geo_vision/robo_referee/pics/side_img/"
     files = os.listdir(data_path)
     imgs =[]
-    labels =[]
 
     for file in files:
         if file.endswith('.png'):
             imgs.append(file)
     imgs = sorted(imgs)
 
-    for file in files:
-        if file.endswith('.txt'):
-            labels.append(file)
-    imgs = sorted(imgs)
-    labels = sorted(labels)
 
 
     side_files = os.listdir(side_img_path)
@@ -60,8 +54,14 @@ def main():
         robo_referee.apply_homography()
         # robo_referee.get_BEV_transform()
         robo_referee.crop_img()
-        robo_referee.contour_detection()
-        robo_referee.ball_loc = robo_referee.ball_detection(robo_referee.src,robo_referee.ball_loc,robo_referee.greenLower_front,robo_referee.greenUpper_front)
+        # robo_referee.contour_detection()
+        ball_loc = robo_referee.ball_detection(robo_referee.orig,robo_referee.ball_loc,robo_referee.greenLower_front,robo_referee.greenUpper_front)
+        if ball_loc != None:
+            ball_loc_hom = np.array([[ball_loc[0]],[ball_loc[1]],[1]])
+            ball_loc_hom = robo_referee.H@ball_loc_hom
+            ball_loc_hom = ball_loc_hom/ball_loc_hom[2]
+            robo_referee.ball_loc = (ball_loc_hom[0]/2-robo_referee.min_x_1, ball_loc_hom[1]/2)
+    
 
         if robo_referee.ball_loc != None:
             ball_in = robo_referee.line_judge()

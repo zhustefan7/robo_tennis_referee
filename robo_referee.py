@@ -1,8 +1,8 @@
 import numpy as np
 import sys
-# sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
+sys.path.remove('/opt/ros/kinetic/lib/python2.7/dist-packages') # in order to import cv under python3
 import cv2 as cv
-# sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
+sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages') 
 import numpy as np
 import argparse
 import random as rng
@@ -25,8 +25,8 @@ class Robo_Referee(object):
         self.max_y_2 = None
 
         #ball detection HSV thresh
-        self.greenLower_front = (0, 69, 0)
-        self.greenUpper_front = (79, 255, 255)
+        self.greenLower_front = (0, 71, 0)
+        self.greenUpper_front = (66, 255, 255)
 
         self.greenLower_side = (0, 64, 142)
         self.greenUpper_side = (95, 255, 255)
@@ -44,6 +44,7 @@ class Robo_Referee(object):
         self.side_img = cv.imread(side_img_dir)
         self.side_img = cv.rotate(self.side_img, cv.ROTATE_90_CLOCKWISE)
         self.side_img = cv.resize(self.side_img,(int(self.side_img.shape[1]/2),int(self.side_img.shape[0]/2)))
+        self.ball_loc = None
     
     def get_BEV_transform(self):
         pitch = 80 #73.34
@@ -256,7 +257,7 @@ class Robo_Referee(object):
         # a series of dilations and erosions to remove any small
         # blobs left in the mask
         mask = cv.inRange(hsv, thresh_low, thresh_high)
-        mask = cv.erode(mask, None, iterations=2)
+        mask = cv.erode(mask, None, iterations=1)
         mask = cv.dilate(mask, None, iterations=2)
         # cv.imshow("Frame", output)
 
@@ -278,12 +279,9 @@ class Robo_Referee(object):
             center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
 
             # only proceed if the radius meets a minimum size
-            if radius > 5:
+            if radius > 1:
                 # draw the circle and centroid on the frame,
                 # then update the list of tracked points
-                # cv.circle(self.src, (int(x), int(y)), int(radius),
-                #     (0, 0, 255), 2)
-                # cv.circle(self.src, center, 5, (0, 0, 255), -1)
                 ball_loc = center
             else:
                 ball_loc = None
